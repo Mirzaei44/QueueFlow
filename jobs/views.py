@@ -4,8 +4,10 @@ from rest_framework import status
 from .models import Job
 from .serializers import JobSerializer, JobCreateSerializer
 from .tasks import process_job_task
+from django_ratelimit.decorators import ratelimit
 
 
+@ratelimit(key="ip", rate="5/m", method="POST", block=True)
 @api_view(["POST"])
 def create_job(request):
     serializer = JobCreateSerializer(data=request.data)
