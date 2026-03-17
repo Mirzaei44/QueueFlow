@@ -1,28 +1,32 @@
-⸻
 # QueueFlow
 
-QueueFlow is a minimal backend service designed to demonstrate real-world backend architecture patterns using Django, Celery, Redis and Docker.
+QueueFlow is a backend service for asynchronous job processing built with Django, Redis, and Celery.
 
-The project focuses on asynchronous job processing, task queues, caching, logging, API protection and CI/CD automation. It is intentionally lightweight while showcasing patterns commonly used in production backend systems.
+
+
+## Example Workflow
+
+### Health Check
+
+![Health](docs/health.png)
+
+### Create Job
+
+![Create Job](docs/create-job.png)
+
+### Completed Job
+
+![Completed](docs/job-completed.png)
+
+
+
+The system exposes a REST API where clients can create jobs. Each job is pushed to a Redis-backed queue and processed asynchronously by a Celery worker. Results are written back to the database and can be retrieved through the API.
+
+The project demonstrates how to design and deploy a small but realistic background processing system using containerized services and cloud infrastructure.
 
 ---
 
-## Features
-
-- REST API built with Django REST Framework
-- Asynchronous job processing using Celery
-- Redis used as message broker and cache layer
-- Background workers handling long-running tasks
-- Dashboard summary endpoint with Redis caching
-- Structured logging for job lifecycle events
-- API rate limiting
-- Docker support
-- GitHub Actions CI pipeline
-- Cloud-ready architecture (AWS compatible)
-
----
-
-## Tech Stack
+## Stack
 
 - Python
 - Django
@@ -30,43 +34,96 @@ The project focuses on asynchronous job processing, task queues, caching, loggin
 - Celery
 - Redis
 - Docker
+- AWS EC2
 - GitHub Actions
 
 ---
 
 ## Architecture
 
+QueueFlow uses a typical queue-based backend architecture.
+
 Client
 ↓
-Django REST API
+Django API
 ↓
-Create Job Endpoint
-↓
-Redis Queue
+Redis (message broker)
 ↓
 Celery Worker
 ↓
-Job Processing
-↓
-Database (Django ORM)
-↓
-Cached Dashboard Summary (Redis)
+Database
+
+The API receives requests and stores jobs. Tasks are pushed into Redis and picked up by Celery workers. Once processing finishes, the result is written back to the database and exposed through the API.
 
 ---
 
-## API Endpoints
+## Core Features
 
-### Create Job
+- Asynchronous job processing
+- Redis-based task queue
+- Celery worker execution
+- REST API for job management
+- Health monitoring endpoint
+- Containerized deployment with Docker
+- Running deployment on AWS EC2
 
-POST `/api/jobs/`
+---
 
-Example request:
+## API
+
+### Health Check
+
+GET /api/health/
+
+Example response
 
 ```json
+{
+  "api": "ok",
+  "redis": "ok",
+  "cache": "ok"
+}
+
+
+⸻
+
+Create Job
+
+POST /api/jobs/
+
+Example request
+
 {
   "name": "summary-job",
   "input_data": {
     "records": 1200
+  }
+}
+
+Example response
+
+{
+  "id": 1,
+  "status": "pending",
+  "task_id": "..."
+}
+
+
+⸻
+
+Get Job
+
+GET /api/jobs/{id}/
+
+Example response
+
+{
+  "id": 1,
+  "name": "summary-job",
+  "status": "completed",
+  "output_data": {
+    "summary": "Processed dataset with 1200 records",
+    "score": 100
   }
 }
 
@@ -77,94 +134,57 @@ List Jobs
 
 GET /api/jobs/list/
 
-⸻
-
-Job Detail
-
-GET /api/jobs/<id>/
 
 ⸻
 
-Dashboard Summary
+Deployment
 
-GET /api/dashboard-summary/
+QueueFlow is deployed on an AWS EC2 instance using Docker containers.
 
-Returns aggregated statistics about jobs. Results are cached in Redis for improved performance.
+The running services are:
+	•	queueflow-app – Django API
+	•	queueflow-worker – Celery worker
+	•	queueflow-redis – Redis broker
+
+The API is accessible through:
+
+http://<EC2-IP>/api/health/
+
 
 ⸻
 
-Running the Project Locally
+Local Setup
 
-Install dependencies:
+Build the image
 
-pip install -r requirements.txt
+docker build -t queueflow .
 
-Start Redis:
+Run Redis
 
-redis-server
+docker run -d --name redis redis:7
 
-Run Django:
+Run the API
 
-python manage.py runserver
+docker run -p 8000:8000 queueflow
 
-Start Celery worker:
+Start a worker
 
 celery -A config worker -l info
 
 
 ⸻
 
-Docker
+CI
 
-Build the container:
-
-docker build -t queueflow .
-
-Run the container:
-
-docker run -p 8000:8000 queueflow
-
+Basic CI checks run through GitHub Actions. The pipeline runs linting and tests on each push.
 
 ⸻
 
-CI Pipeline
-
-The repository includes a GitHub Actions workflow that automatically runs Django checks on every push.
-
-This ensures the project remains deployable and prevents broken commits from reaching the main branch.
-
-⸻
-
-Cloud Deployment (AWS Ready)
-
-The architecture is compatible with common AWS backend deployments such as:
-	•	EC2 for the Django application
-	•	Redis (Elasticache) for task queue and caching
-	•	Celery workers running on separate compute instances
-	•	RDS or managed database for persistent storage
-	•	Docker containers for consistent deployment
+Future Improvements
+	•	PostgreSQL instead of SQLite
+	•	Docker Compose orchestration
+	•	Gunicorn + Nginx production setup
+	•	Job retry and scheduling support
+	•	Monitoring and metrics
 
 ⸻
-
-## Scaling Notes
-
-QueueFlow is designed with a queue-based architecture, meaning job processing can be scaled horizontally by running multiple Celery workers against the same Redis broker.
-
-This allows background jobs to be processed concurrently without blocking the main API service.
-
-⸻
-
-
-Purpose of the Project
-
-QueueFlow was built as a backend engineering exercise to demonstrate:
-	•	asynchronous background processing
-	•	queue-based architecture
-	•	caching strategies
-	•	API protection
-	•	CI/CD automation
-	•	containerised deployment
-
-The goal is to showcase practical backend development patterns used in modern distributed systems.
-
----
