@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+.env
+db.sqlite3
+.DS_Store
+logs/
+media/
+staticfiles/
+celerybeat-schedule
+celerybeat-schedule-shm
+celerybeat-schedule-wal
