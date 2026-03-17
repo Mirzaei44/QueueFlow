@@ -146,6 +146,15 @@ The architecture is compatible with common AWS backend deployments such as:
 
 ⸻
 
+## Scaling Notes
+
+QueueFlow is designed with a queue-based architecture, meaning job processing can be scaled horizontally by running multiple Celery workers against the same Redis broker.
+
+This allows background jobs to be processed concurrently without blocking the main API service.
+
+⸻
+
+
 Purpose of the Project
 
 QueueFlow was built as a backend engineering exercise to demonstrate:

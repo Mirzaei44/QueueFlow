@@ -94,3 +94,11 @@ def health_check(request):
         status["cache"] = "error"
 
     return JsonResponse(status)
+
+
+@api_view(["GET"])
+def queue_status(request):
+    summary = Job.objects.values("status").annotate(count=Count("id"))
+    return Response({
+        "queue_overview": list(summary)
+    })
