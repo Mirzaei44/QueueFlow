@@ -4,7 +4,7 @@ from celery import shared_task
 from django.utils import timezone
 
 from .models import Job
-
+from django.core.cache import cache
 logger = logging.getLogger("jobs")
 
 
@@ -27,5 +27,5 @@ def process_job_task(job_id):
     job.save(update_fields=["output_data", "status", "completed_at"])
 
     logger.info(f"Completed job_id={job.id} with status={job.status}")
-
+    cache.delete("dashboard_summary")
     return {"job_id": job.id, "status": job.status}
