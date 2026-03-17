@@ -1,22 +1,56 @@
+⸻
 # QueueFlow
 
-QueueFlow is a minimal backend service built to demonstrate common production backend patterns using Django, Django REST Framework, Celery and Redis.
+QueueFlow is a minimal backend service designed to demonstrate real-world backend architecture patterns using Django, Celery, Redis and Docker.
 
-The project focuses on asynchronous job processing, background workers, task queues, caching, logging, and API protection. It is intentionally lightweight while showcasing real-world backend architecture concepts.
+The project focuses on asynchronous job processing, task queues, caching, logging, API protection and CI/CD automation. It is intentionally lightweight while showcasing patterns commonly used in production backend systems.
 
 ---
 
-## Core Features
+## Features
 
 - REST API built with Django REST Framework
 - Asynchronous job processing using Celery
-- Redis used as a message broker and cache layer
+- Redis used as message broker and cache layer
 - Background workers handling long-running tasks
 - Dashboard summary endpoint with Redis caching
 - Structured logging for job lifecycle events
-- Rate limiting for API protection
+- API rate limiting
 - Docker support
-- CI pipeline using GitHub Actions
+- GitHub Actions CI pipeline
+- Cloud-ready architecture (AWS compatible)
+
+---
+
+## Tech Stack
+
+- Python
+- Django
+- Django REST Framework
+- Celery
+- Redis
+- Docker
+- GitHub Actions
+
+---
+
+## Architecture
+
+Client
+↓
+Django REST API
+↓
+Create Job Endpoint
+↓
+Redis Queue
+↓
+Celery Worker
+↓
+Job Processing
+↓
+Database (Django ORM)
+↓
+Cached Dashboard Summary (Redis)
 
 ---
 
@@ -24,7 +58,7 @@ The project focuses on asynchronous job processing, background workers, task que
 
 ### Create Job
 
-POST /api/jobs/
+POST `/api/jobs/`
 
 Example request:
 
@@ -43,13 +77,11 @@ List Jobs
 
 GET /api/jobs/list/
 
-
 ⸻
 
 Job Detail
 
 GET /api/jobs/<id>/
-
 
 ⸻
 
@@ -58,38 +90,6 @@ Dashboard Summary
 GET /api/dashboard-summary/
 
 Returns aggregated statistics about jobs. Results are cached in Redis for improved performance.
-
-⸻
-
-System Architecture
-
-Client
-  ↓
-Django / DRF API
-  ↓
-Job Creation Endpoint
-  ↓
-Redis Task Queue
-  ↓
-Celery Worker
-  ↓
-Job Processing
-  ↓
-PostgreSQL / Django ORM
-  ↓
-Cached Summary (Redis)
-
-
-⸻
-
-Technology Stack
-	•	Python
-	•	Django
-	•	Django REST Framework
-	•	Celery
-	•	Redis
-	•	Docker
-	•	GitHub Actions
 
 ⸻
 
@@ -114,24 +114,48 @@ celery -A config worker -l info
 
 ⸻
 
-Example Workflow
-	1.	A client sends a request to create a job.
-	2.	The API creates a database record and queues a task.
-	3.	Redis stores the task in the queue.
-	4.	A Celery worker processes the task asynchronously.
-	5.	The worker updates the job status and result.
-	6.	Dashboard summary data is cached in Redis.
+Docker
+
+Build the container:
+
+docker build -t queueflow .
+
+Run the container:
+
+docker run -p 8000:8000 queueflow
+
 
 ⸻
 
-Project Purpose
+CI Pipeline
 
-QueueFlow was built as a focused backend engineering exercise to demonstrate:
-	•	asynchronous task processing
+The repository includes a GitHub Actions workflow that automatically runs Django checks on every push.
+
+This ensures the project remains deployable and prevents broken commits from reaching the main branch.
+
+⸻
+
+Cloud Deployment (AWS Ready)
+
+The architecture is compatible with common AWS backend deployments such as:
+	•	EC2 for the Django application
+	•	Redis (Elasticache) for task queue and caching
+	•	Celery workers running on separate compute instances
+	•	RDS or managed database for persistent storage
+	•	Docker containers for consistent deployment
+
+⸻
+
+Purpose of the Project
+
+QueueFlow was built as a backend engineering exercise to demonstrate:
+	•	asynchronous background processing
 	•	queue-based architecture
 	•	caching strategies
-	•	API protection mechanisms
-	•	containerisation and CI readiness
+	•	API protection
+	•	CI/CD automation
+	•	containerised deployment
 
 The goal is to showcase practical backend development patterns used in modern distributed systems.
 
+---
