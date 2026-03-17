@@ -1,9 +1,9 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-
 from .models import Job
 from .serializers import JobSerializer, JobCreateSerializer
+from .tasks import process_job_task
 
 
 @api_view(["POST"])
@@ -11,7 +11,10 @@ def create_job(request):
     serializer = JobCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     job = serializer.save()
-    return Response(JobSerializer(job).data, status=status.HTTP_201_CREATED)
+    task = process_job_task.delay(job.id)
+    data = JobSerializer(job).data
+    data["task_id"] = task.id
+    return Response(data, status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET"])
