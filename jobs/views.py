@@ -7,7 +7,9 @@ from .tasks import process_job_task
 from django_ratelimit.decorators import ratelimit
 from django.core.cache import cache
 from django.db.models import Count
-
+from django.http import JsonResponse
+from django.core.cache import cache
+import redis
 @ratelimit(key="ip", rate="5/m", method="POST", block=True)
 @api_view(["POST"])
 def create_job(request):
@@ -66,3 +68,29 @@ def dashboard_summary(request):
         "source": "database",
         "data": summary
     })
+    
+    
+def health_check(request):
+    status = {
+        "api": "ok",
+        "redis": "unknown",
+        "cache": "unknown"
+    }
+
+    # check redis
+    try:
+        r = redis.Redis(host="127.0.0.1", port=6379)
+        r.ping()
+        status["redis"] = "ok"
+    except Exception:
+        status["redis"] = "error"
+
+    # check cache
+    try:
+        cache.set("health_test", "ok", timeout=5)
+        if cache.get("health_test") == "ok":
+            status["cache"] = "ok"
+    except Exception:
+        status["cache"] = "error"
+
+    return JsonResponse(status)
