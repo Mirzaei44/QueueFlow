@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 from decouple import config
 
@@ -142,7 +142,28 @@ CELERY_TIMEZONE = "UTC"
 
 
 
+USE_FILE_LOGGING = os.getenv("USE_FILE_LOGGING", "false").lower() == "true"
 
+LOGGING_HANDLERS = {
+    "console": {
+        "class": "logging.StreamHandler",
+        "formatter": "standard",
+    },
+}
+
+CORE_LOGGER_HANDLERS = ["console"]
+
+if USE_FILE_LOGGING:
+    LOG_DIR = BASE_DIR / "logs"
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+    LOGGING_HANDLERS["file"] = {
+        "level": "INFO",
+        "class": "logging.FileHandler",
+        "filename": LOG_DIR / "app.log",
+        "formatter": "standard",
+    }
+    CORE_LOGGER_HANDLERS.append("file")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -152,28 +173,15 @@ LOGGING = {
             "style": "{",
         },
     },
-    "handlers": {
-        "file": {
-            "level": "INFO",
-            "class": "logging.FileHandler",
-            "filename": "logs/app.log",
-            "formatter": "standard",
-        },
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "standard",
-        },
-    },
+    "handlers": LOGGING_HANDLERS,
     "loggers": {
-        "jobs": {
-            "handlers": ["file", "console"],
-            "level": "INFO",
-            "propagate": False,
-        },
+    "jobs": {
+        "handlers": CORE_LOGGER_HANDLERS,
+        "level": "INFO",
+        "propagate": False,
     },
+},
 }
-
-
 
 
 
